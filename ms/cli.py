@@ -320,6 +320,7 @@ def cmd_bootstrap(args) -> int:
                     al["ssh_host"], al.get("base_dir", "~/repos"), name
                 )
                 print("  " + gitops.add_remote(exp, "aliyun", aurl))
+                print("  " + gitops.fetch_remote(exp, "aliyun"))
         print("  " + gitops.checkout_default_branch(exp))
     return 0
 

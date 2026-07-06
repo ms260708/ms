@@ -58,4 +58,5 @@ def ensure_mirror(
         return results
     results.append("mirror: created/verified")
     results.append("aliyun remote: " + gitops.add_remote(path, "aliyun", url))
+    results.append("aliyun fetch: " + gitops.fetch_remote(path, "aliyun"))
     return results
