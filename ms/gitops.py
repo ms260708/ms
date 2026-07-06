@@ -158,3 +158,35 @@ def fetch_remote(path: str, remote: str) -> str:
     if r.returncode != 0:
         return f"FAILED(fetch {remote}): " + r.stderr.strip()[:120]
     return f"ok(fetch {remote})"
+
+
+def checkout_default_branch(path: str) -> str:
+    """Ensure the right local branch is checked out after a clone.
+
+    Bare mirrors created via `git init --bare` default HEAD to 'master', so
+    cloning from them can leave the worktree on an unborn 'master' even when the
+    real default branch is 'main'. Detect origin's advertised default and check
+    it out (DWIM creates the local tracking branch).
+    """
+    subprocess.run(
+        ["git", "-C", path, "remote", "set-head", "origin", "-a"],
+        capture_output=True,
+        text=True,
+    )
+    r = subprocess.run(
+        ["git", "-C", path, "symbolic-ref", "--short", "refs/remotes/origin/HEAD"],
+        capture_output=True,
+        text=True,
+    )
+    if r.returncode == 0 and r.stdout.strip():
+        branch = r.stdout.strip().rsplit("/", 1)[-1]
+        if branch:
+            c = subprocess.run(
+                ["git", "-C", path, "checkout", "-B", branch, f"origin/{branch}"],
+                capture_output=True,
+                text=True,
+            )
+            if c.returncode == 0:
+                return f"ok(checkout {branch})"
+            return f"FAILED(checkout {branch}): " + c.stderr.strip()[:120]
+    return "ok(no default-branch change needed)"
