@@ -300,9 +300,26 @@ def cmd_bootstrap(args) -> int:
             continue
         if args.dry_run:
             print(f"{name}: [{src}] [dry-run] git clone {url} {exp}")
-        else:
-            print(f"{name}: cloning from {src} ...")
-            print("  " + gitops.clone(url, exp))
+            continue
+        print(f"{name}: cloning from {src} ...")
+        cres = gitops.clone(url, exp)
+        print("  clone: " + cres)
+        if not cres.startswith("ok"):
+            continue
+        # Normalize remotes so origin=GitHub, aliyun=mirror.
+        # (git clone set origin=<source url>; fix it to the canonical layout.)
+        gh = r.get("github")
+        if src == "aliyun":
+            print("  " + gitops.rename_remote(exp, "origin", "aliyun"))
+            if gh:
+                print("  " + gitops.add_remote(exp, "origin", f"git@github.com:{gh}.git"))
+                print("  " + gitops.fetch_remote(exp, "origin"))
+        else:  # cloned from origin (github)
+            if al.get("ssh_host"):
+                aurl = mirror.mirror_remote_url(
+                    al["ssh_host"], al.get("base_dir", "~/repos"), name
+                )
+                print("  " + gitops.add_remote(exp, "aliyun", aurl))
     return 0
 
 

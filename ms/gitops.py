@@ -134,3 +134,27 @@ def clone(url: str, path: str, dry_run: bool = False) -> str:
     if r.returncode != 0:
         return "FAILED: " + r.stderr.strip()[:140]
     return "ok"
+
+
+def rename_remote(path: str, old: str, new: str) -> str:
+    """Rename remote <old> -> <new>. Returns a status string."""
+    r = subprocess.run(
+        ["git", "-C", path, "remote", "rename", old, new],
+        capture_output=True,
+        text=True,
+    )
+    if r.returncode != 0:
+        return f"FAILED(rename {old}->{new}): " + r.stderr.strip()[:120]
+    return f"ok(rename {old}->{new})"
+
+
+def fetch_remote(path: str, remote: str) -> str:
+    """Fetch <remote>. Returns a status string."""
+    r = subprocess.run(
+        ["git", "-C", path, "fetch", remote],
+        capture_output=True,
+        text=True,
+    )
+    if r.returncode != 0:
+        return f"FAILED(fetch {remote}): " + r.stderr.strip()[:120]
+    return f"ok(fetch {remote})"
