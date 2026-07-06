@@ -1,0 +1,17 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "ms"
+version = "0.1.0"
+description = "Personal multi-repo + dual-remote sync manager (GitHub + aliyun bare mirror)."
+readme = "README.md"
+requires-python = ">=3.11"
+authors = [{ name = "licoded" }]
+
+[project.scripts]
+ms = "ms.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["ms"]
