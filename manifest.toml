@@ -1,0 +1,32 @@
+[github]
+default_owner = "licoded"
+
+[aliyun]
+ssh_host = "aliyun_server"
+base_dir = "~/repos"
+
+# Repos are appended below as [[repo]] blocks by `ms add`.
+
+[[repo]]
+name = "cdx"
+path = "~/tmp/cdx"
+github = "licoded/cdx"
+push_policy = "aliyun-only"
+
+[[repo]]
+name = "nolo_llm_knowledge"
+path = "~/files/envs/llm_knowledge/nolo_llm_knowledge"
+github = "licoded/nolo_llm_knowledge"
+push_policy = "aliyun-only"
+
+[[repo]]
+name = "back-service-admin"
+path = "~/files/dev/cpp/cosy_rewrite_2026_fromCynthia/back-service-admin"
+github = "licoded/back-service-admin"
+push_policy = "aliyun-only"
+
+[[repo]]
+name = "ms"
+path = "~/tmp/ms"
+github = "licoded/ms"
+push_policy = "aliyun-only"
