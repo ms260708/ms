@@ -125,6 +125,26 @@ def push(path: str, remote: str, ref: str = "HEAD", dry_run: bool = False) -> st
     return "ok"
 
 
+def pull(path: str, remote: str, dry_run: bool = False) -> str:
+    """Fast-forward pull of the current branch from <remote>.
+
+    Uses --ff-only so a sync tool never creates surprise merge commits: a
+    divergent worktree is reported as FAILED for the user to resolve by hand.
+    Returns 'ok', a 'FAILED: ...' message, or the command string on dry_run.
+    """
+    branch = current_branch(path)
+    if not branch:
+        return "FAILED: unborn HEAD (no current branch)"
+    argv = ["git", "-C", path, "pull", "--ff-only", remote, branch]
+    if dry_run:
+        return " ".join(argv)
+    r = subprocess.run(argv, capture_output=True, text=True)
+    if r.returncode != 0:
+        msg = (r.stderr.strip() or r.stdout.strip())
+        return "FAILED: " + msg[:140]
+    return "ok"
+
+
 def clone(url: str, path: str, dry_run: bool = False) -> str:
     """Clone <url> into <path>. With dry_run, returns the command instead of running it."""
     argv = ["git", "clone", url, path]

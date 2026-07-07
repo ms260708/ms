@@ -54,6 +54,7 @@ push_policy = "aliyun-only"   # aliyun-only | both | skip
 | `ms add <path> [--name N] [--policy P] [--no-mirror]` | Register a repo (auto-detects `origin`, infers policy, optionally creates the mirror). |
 | `ms mirror [<path>]` | Ensure the aliyun bare mirror exists and `aliyun` remote is set (all repos if no path). |
 | `ms push [--backup] [--name N]` | Push `HEAD` to aliyun; `--backup` (or policy `both`) also pushes to origin. `skip` repos are skipped. |
+| `ms pull [--backup] [--name N]` | Fast-forward pull of the current branch from aliyun (where `ms push` lands by default); `--backup` pulls from origin instead. `--ff-only`, so a divergent worktree is reported as `FAILED` to resolve by hand. `skip` repos and repos missing the remote are skipped. |
 | `ms bootstrap` | Clone repos whose local path is missing (from aliyun mirror, else origin). |
 | `ms config` | Print resolved manifest path, ssh_host, base_dir, default_owner, repo count. |
 
@@ -69,4 +70,6 @@ ms add ~/tmp/VideoCaptioner    # detected as a fork -> policy=skip
 ms status                      # see what's dirty / ahead / behind
 ms push                        # fast backup to the VPS
 ms push --backup               # also push to GitHub
+ms pull                        # pull latest from the VPS (aliyun mirror)
+ms pull --backup               # pull from GitHub instead
 ```

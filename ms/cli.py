@@ -1,7 +1,7 @@
 """argparse CLI: subcommand dispatch for `ms`.
 
 Read-only commands: list, status, config (ignore --dry-run).
-Side-effecting commands: add (mirror step), mirror, push, bootstrap
+Side-effecting commands: add (mirror step), mirror, push, pull, bootstrap
 (each accepts -n/--dry-run to print exact commands without running them).
 """
 from __future__ import annotations
@@ -56,6 +56,12 @@ def build_parser() -> argparse.ArgumentParser:
     sp.add_argument("--name", help="select a single repo by name")
     sp.add_argument("-n", "--dry-run", action="store_true", default=argparse.SUPPRESS)
     sp.set_defaults(func=cmd_push)
+
+    sp = sub.add_parser("pull", help="pull from aliyun (and origin with --backup)")
+    sp.add_argument("--backup", action="store_true", help="pull from origin (GitHub) instead of aliyun")
+    sp.add_argument("--name", help="select a single repo by name")
+    sp.add_argument("-n", "--dry-run", action="store_true", default=argparse.SUPPRESS)
+    sp.set_defaults(func=cmd_pull)
 
     sp = sub.add_parser("bootstrap", help="clone repos whose path is missing")
     sp.add_argument("-n", "--dry-run", action="store_true", default=argparse.SUPPRESS)
@@ -269,6 +275,33 @@ def cmd_push(args) -> int:
                 f"origin: {gitops.push(exp, 'origin', 'HEAD', dry_run=args.dry_run)}"
             )
         print(f"{name}: [{label}] " + ", ".join(parts))
+    return 0
+
+
+def cmd_pull(args) -> int:
+    data, _ = _load_or_exit()
+    rs = manifest.repos(data)
+    if args.name:
+        rs = [r for r in rs if r.get("name") == args.name]
+        if not rs:
+            print(f"no repo named '{args.name}'", file=sys.stderr)
+            return 1
+    label = "dry-run" if args.dry_run else "pull"
+    for r in rs:
+        name = str(r.get("name", "?"))
+        policy = str(r.get("push_policy", "?"))
+        exp = manifest.expand(r.get("path"))
+        if policy == "skip":
+            print(f"{name}: skipped (policy=skip)")
+            continue
+        if not exp or not os.path.isdir(exp):
+            print(f"{name}: skipped (path missing)")
+            continue
+        remote = "origin" if args.backup else "aliyun"
+        if not gitops.has_remote(exp, remote):
+            print(f"{name}: skipped (remote '{remote}' missing)")
+            continue
+        print(f"{name}: [{label}] {remote}: {gitops.pull(exp, remote, dry_run=args.dry_run)}")
     return 0
 
 

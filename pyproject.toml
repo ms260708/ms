@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "ms"
-version = "0.1.0"
+version = "0.2.0"
 description = "Personal multi-repo + dual-remote sync manager (GitHub + aliyun bare mirror)."
 readme = "README.md"
 requires-python = ">=3.11"
