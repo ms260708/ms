@@ -1,5 +1,5 @@
 [github]
-default_owner = "licoded"
+default_owner = "ms260708"
 
 [aliyun]
 ssh_host = "aliyun_server"
@@ -10,23 +10,29 @@ base_dir = "~/repos"
 [[repo]]
 name = "cdx"
 path = "~/tmp/cdx"
-github = "licoded/cdx"
+github = "ms260708/cdx"
 push_policy = "aliyun-only"
 
 [[repo]]
 name = "nolo_llm_knowledge"
 path = "~/files/envs/llm_knowledge/nolo_llm_knowledge"
-github = "licoded/nolo_llm_knowledge"
+github = "ms260708/nolo_llm_knowledge"
 push_policy = "aliyun-only"
 
 [[repo]]
 name = "back-service-admin"
 path = "~/files/dev/cpp/cosy_rewrite_2026_fromCynthia/back-service-admin"
-github = "licoded/back-service-admin"
+github = "ms260708/back-service-admin"
 push_policy = "aliyun-only"
 
 [[repo]]
 name = "ms"
 path = "~/tmp/ms"
-github = "licoded/ms"
+github = "ms260708/ms"
+push_policy = "aliyun-only"
+
+[[repo]]
+name = "dotfiles"
+path = "~/tmp/dotfiles"
+github = "ms260708/dotfiles"
 push_policy = "aliyun-only"
