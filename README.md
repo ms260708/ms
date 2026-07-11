@@ -32,7 +32,7 @@ with the `MS_MANIFEST` environment variable, handy for tests):
 
 ```toml
 [github]
-default_owner = "licoded"
+default_owner = "ms260708"
 
 [aliyun]
 ssh_host = "aliyun_server"
@@ -41,7 +41,7 @@ base_dir = "~/repos"      # ~ is expanded on the REMOTE shell
 [[repo]]
 name = "cdx"
 path = "~/tmp/cdx"        # ~ is expanduser'd locally before use
-github = "licoded/cdx"    # owner/repo; omit if there is no github remote
+github = "ms260708/cdx"    # owner/repo; omit if there is no github remote
 push_policy = "aliyun-only"   # aliyun-only | both | skip
 ```
 

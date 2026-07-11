@@ -4,7 +4,7 @@ Reads TOML via stdlib tomllib; writes TOML by generating strings manually
 (no runtime dependency). The manifest is a small config file of the form:
 
     [github]
-    default_owner = "licoded"
+    default_owner = "ms260708"
 
     [aliyun]
     ssh_host = "aliyun_server"
@@ -13,7 +13,7 @@ Reads TOML via stdlib tomllib; writes TOML by generating strings manually
     [[repo]]
     name = "cdx"
     path = "~/tmp/cdx"
-    github = "licoded/cdx"
+    github = "ms260708/cdx"
     push_policy = "aliyun-only"
 """
 from __future__ import annotations
@@ -22,12 +22,12 @@ import os
 import tomllib
 from pathlib import Path
 
-DEFAULT_GITHUB = {"default_owner": "licoded"}
+DEFAULT_GITHUB = {"default_owner": "ms260708"}
 DEFAULT_ALIYUN = {"ssh_host": "aliyun_server", "base_dir": "~/repos"}
 
 DEFAULT_MANIFEST_TEXT = """\
 [github]
-default_owner = "licoded"
+default_owner = "ms260708"
 
 [aliyun]
 ssh_host = "aliyun_server"
