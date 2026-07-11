@@ -104,6 +104,8 @@ def format_repo_block(repo: dict) -> str:
     """Serialize one repo dict as a [[repo]] TOML block (text append-friendly)."""
     lines = ["", "[[repo]]"]
     lines.append(f'name = "{_esc(repo["name"])}"')
+    if repo.get("id"):
+        lines.append(f'id = "{_esc(repo["id"])}"')
     lines.append(f'path = "{_esc(repo["path"])}"')
     if repo.get("github"):
         lines.append(f'github = "{_esc(repo["github"])}"')
@@ -115,6 +117,11 @@ def append_repo(path: str, repo: dict) -> None:
     """Append a single [[repo]] block to the manifest file (preserves existing content)."""
     with open(path, "a") as f:
         f.write(format_repo_block(repo))
+
+
+def repo_id(repo: dict) -> str:
+    """Get the repo's id (mirror path identifier), falling back to name."""
+    return str(repo.get("id") or repo.get("name", ""))
 
 
 def find_repo_by_name(data: dict, name: str) -> dict | None:
@@ -189,9 +196,16 @@ def update_repo_field(
             if key_line_idx is not None:
                 lines[key_line_idx] = new_line
             else:
-                # Insert after the last line of the block
-                lines.insert(target_end + 1, new_line)
-                target_end += 1
+                # Insert after name line if key is "id", else after last line
+                if key == "id":
+                    for i in range(target_start, target_end + 1):
+                        if lines[i].strip().startswith("name = "):
+                            lines.insert(i + 1, new_line)
+                            target_end += 1
+                            break
+                else:
+                    lines.insert(target_end + 1, new_line)
+                    target_end += 1
 
     with open(mpath, "w") as f:
         f.writelines(lines)

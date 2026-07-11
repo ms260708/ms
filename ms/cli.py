@@ -69,6 +69,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     sp = sub.add_parser("edit", help="modify a registered repo's settings")
     sp.add_argument("name", help="repo name to edit")
+    sp.add_argument("--name", dest="new_name", help="change display name")
     sp.add_argument("--policy", choices=["aliyun-only", "both", "skip"])
     sp.add_argument("--github", help="set github owner/repo (pass '' to clear)")
     sp.add_argument("-n", "--dry-run", action="store_true", default=argparse.SUPPRESS)
@@ -212,6 +213,7 @@ def cmd_add(args) -> int:
 
     repo = {
         "name": name,
+        "id": name,  # id defaults to name for new repos
         "path": manifest.shorten_home(exp or raw_path),
         "github": github,
         "push_policy": policy,
@@ -223,7 +225,7 @@ def cmd_add(args) -> int:
             print(f"warning: path not found, cannot mirror: {exp}", file=sys.stderr)
         else:
             for line in mirror.ensure_mirror(
-                exp, name, al.get("ssh_host"), al.get("base_dir"), dry_run=dry
+                exp, manifest.repo_id(repo), al.get("ssh_host"), al.get("base_dir"), dry_run=dry
             ):
                 print("  " + line)
 
@@ -248,6 +250,8 @@ def cmd_edit(args) -> int:
         return 1
 
     updates: dict[str, str | None] = {}
+    if args.new_name is not None:
+        updates["name"] = args.new_name
     if args.policy is not None:
         updates["push_policy"] = args.policy
     if args.github is not None:
@@ -279,14 +283,14 @@ def cmd_mirror(args) -> int:
             print(f"no registered repo matches path: {args.path}", file=sys.stderr)
             return 1
     for r in rs:
-        name = str(r.get("name", "?"))
+        rid = manifest.repo_id(r)
         exp = manifest.expand(r.get("path"))
-        print(f"== {name} ({exp})")
+        print(f"== {rid} ({exp})")
         if not exp or not os.path.isdir(exp):
             print("  path missing - skip")
             continue
         for line in mirror.ensure_mirror(
-            exp, name, al.get("ssh_host"), al.get("base_dir"), dry_run=args.dry_run
+            exp, rid, al.get("ssh_host"), al.get("base_dir"), dry_run=args.dry_run
         ):
             print("  " + line)
     return 0
@@ -348,13 +352,20 @@ def cmd_pull(args) -> int:
 
 
 def cmd_bootstrap(args) -> int:
-    data, _ = _load_or_exit()
+    data, mpath = _load_or_exit()
     al = manifest.aliyun_section(data)
     rs = manifest.repos(data)
     for r in rs:
         name = str(r.get("name", "?"))
+        rid = manifest.repo_id(r)
         policy = str(r.get("push_policy", "?"))
         exp = manifest.expand(r.get("path"))
+
+        # Backfill id if missing (backward compatibility)
+        if not r.get("id") and not args.dry_run:
+            manifest.update_repo_field(mpath, name, {"id": name})
+            print(f"{name}: backfilled id={name}")
+
         if exp and os.path.isdir(exp) and gitops.is_git_repo(exp):
             print(f"{name}: present ({exp})")
             continue
@@ -364,7 +375,7 @@ def cmd_bootstrap(args) -> int:
         url, src = None, None
         if policy != "skip" and al.get("ssh_host"):
             url = mirror.mirror_remote_url(
-                al["ssh_host"], al.get("base_dir", "~/repos"), name
+                al["ssh_host"], al.get("base_dir", "~/repos"), rid
             )
             src = "aliyun"
         elif r.get("github"):
@@ -392,7 +403,7 @@ def cmd_bootstrap(args) -> int:
         else:  # cloned from origin (github)
             if al.get("ssh_host"):
                 aurl = mirror.mirror_remote_url(
-                    al["ssh_host"], al.get("base_dir", "~/repos"), name
+                    al["ssh_host"], al.get("base_dir", "~/repos"), rid
                 )
                 print("  " + gitops.add_remote(exp, "aliyun", aurl))
                 print("  " + gitops.fetch_remote(exp, "aliyun"))
