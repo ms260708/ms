@@ -53,13 +53,15 @@ def build_parser() -> argparse.ArgumentParser:
 
     sp = sub.add_parser("push", help="push to aliyun (and origin with --all)")
     sp.add_argument("--all", action="store_true", help="also push to origin (GitHub)")
-    sp.add_argument("--name", help="select a single repo by name or id")
+    sp.add_argument("--name", help="select a single repo by name")
+    sp.add_argument("--id", help="select a single repo by id")
     sp.add_argument("-n", "--dry-run", action="store_true", default=argparse.SUPPRESS)
     sp.set_defaults(func=cmd_push)
 
     sp = sub.add_parser("pull", help="pull from aliyun (and origin with --backup)")
     sp.add_argument("--backup", action="store_true", help="pull from origin (GitHub) instead of aliyun")
-    sp.add_argument("--name", help="select a single repo by name or id")
+    sp.add_argument("--name", help="select a single repo by name")
+    sp.add_argument("--id", help="select a single repo by id")
     sp.add_argument("-n", "--dry-run", action="store_true", default=argparse.SUPPRESS)
     sp.set_defaults(func=cmd_pull)
 
@@ -68,7 +70,7 @@ def build_parser() -> argparse.ArgumentParser:
     sp.set_defaults(func=cmd_bootstrap)
 
     sp = sub.add_parser("edit", help="modify a registered repo's settings")
-    sp.add_argument("name", help="repo name or id to edit")
+    sp.add_argument("repo", help="repo to edit (by name or id)")
     sp.add_argument("--name", dest="new_name", help="change display name")
     sp.add_argument("--id", dest="new_id", help="change mirror path id")
     sp.add_argument("--path", dest="new_path", help="change local path")
@@ -199,7 +201,7 @@ def cmd_add(args) -> int:
     exp = manifest.expand(raw_path)
     name = args.name or os.path.basename(os.path.normpath(exp or raw_path))
 
-    if manifest.find_repo_by_name(data, name):
+    if manifest.find_repo(data, name=name):
         print(f"repo '{name}' already in manifest", file=sys.stderr)
         return 1
 
@@ -249,9 +251,9 @@ def cmd_add(args) -> int:
 
 def cmd_edit(args) -> int:
     data, mpath = _load_or_exit()
-    repo = manifest.find_repo_by_name(data, args.name)
+    repo = manifest.find_repo_by_key(data, args.repo)
     if not repo:
-        print(f"no repo named '{args.name}'", file=sys.stderr)
+        print(f"no repo '{args.repo}'", file=sys.stderr)
         return 1
 
     updates: dict[str, str | None] = {}
@@ -290,8 +292,8 @@ def cmd_edit(args) -> int:
     if args.dry_run:
         print(f"[dry-run] would update {mpath}")
     else:
-        manifest.update_repo_field(mpath, args.name, updates)
-        print(f"updated [[repo]] {args.name} in {mpath}")
+        manifest.update_repo_field(mpath, repo, updates)
+        print(f"updated [[repo]] {repo.get('name')} in {mpath}")
     return 0
 
 
@@ -322,10 +324,11 @@ def cmd_mirror(args) -> int:
 def cmd_push(args) -> int:
     data, _ = _load_or_exit()
     rs = manifest.repos(data)
-    if args.name:
-        rs = manifest.filter_repos(data, args.name)
+    if args.name or args.id:
+        rs = manifest.filter_repos(data, name=args.name, id=args.id)
         if not rs:
-            print(f"no repo named '{args.name}'", file=sys.stderr)
+            sel = args.name or args.id
+            print(f"no repo '{sel}'", file=sys.stderr)
             return 1
     label = "dry-run" if args.dry_run else "push"
     for r in rs:
@@ -350,10 +353,11 @@ def cmd_push(args) -> int:
 def cmd_pull(args) -> int:
     data, _ = _load_or_exit()
     rs = manifest.repos(data)
-    if args.name:
-        rs = manifest.filter_repos(data, args.name)
+    if args.name or args.id:
+        rs = manifest.filter_repos(data, name=args.name, id=args.id)
         if not rs:
-            print(f"no repo named '{args.name}'", file=sys.stderr)
+            sel = args.name or args.id
+            print(f"no repo '{sel}'", file=sys.stderr)
             return 1
     label = "dry-run" if args.dry_run else "pull"
     for r in rs:

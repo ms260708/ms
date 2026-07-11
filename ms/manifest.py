@@ -124,16 +124,35 @@ def repo_id(repo: dict) -> str:
     return str(repo.get("id") or repo.get("name", ""))
 
 
-def find_repo_by_name(data: dict, name: str) -> dict | None:
+def find_repo(data: dict, *, name: str | None = None, id: str | None = None) -> dict | None:
+    """Find a single repo by name and/or id (exact match)."""
     for r in repos(data):
-        if r.get("name") == name or r.get("id") == name:
-            return r
+        if name is not None and r.get("name") != name:
+            continue
+        if id is not None and r.get("id") != id:
+            continue
+        return r
     return None
 
 
-def filter_repos(data: dict, name: str) -> list[dict]:
-    """Filter repos by name or id."""
-    return [r for r in repos(data) if r.get("name") == name or r.get("id") == name]
+def find_repo_by_key(data: dict, key: str) -> dict | None:
+    """Find a repo by name OR id (used for user-facing lookup like edit)."""
+    return find_repo(data, name=key) or find_repo(data, id=key)
+    return None
+
+
+def filter_repos(
+    data: dict, *, name: str | None = None, id: str | None = None
+) -> list[dict]:
+    """Filter repos by name and/or id (exact match)."""
+    out = []
+    for r in repos(data):
+        if name is not None and r.get("name") != name:
+            continue
+        if id is not None and r.get("id") != id:
+            continue
+        out.append(r)
+    return out
 
 
 def find_repo_by_path(data: dict, exp_path: str) -> dict | None:
@@ -144,9 +163,9 @@ def find_repo_by_path(data: dict, exp_path: str) -> dict | None:
 
 
 def update_repo_field(
-    mpath: str, name: str, updates: dict[str, str | None]
+    mpath: str, repo: dict, updates: dict[str, str | None]
 ) -> bool:
-    """Edit a [[repo]] block in-place by name.
+    """Edit a [[repo]] block in-place, located by the repo's current name+id.
 
     *updates* maps TOML keys to new values.  A value of ``None`` (or empty
     string) means *delete that key* from the block.  Returns ``True`` if the
@@ -167,15 +186,22 @@ def update_repo_field(
     if current_start is not None:
         blocks.append((current_start, len(lines) - 1))
 
-    # 2. Find the block that contains name = "..." or id = "..."
+    # 2. Find the target block by matching name AND id (whichever present).
+    want_name = repo.get("name")
+    want_id = repo.get("id")
     target_start = target_end = None
     for start, end in blocks:
+        block_name = block_id = None
         for i in range(start, end + 1):
             stripped = lines[i].strip()
-            if (stripped.startswith("name = ") or stripped.startswith("id = ")) and f'"{name}"' in stripped:
-                target_start, target_end = start, end
-                break
-        if target_start is not None:
+            if stripped.startswith("name = "):
+                block_name = stripped.split('"', 2)[1] if '"' in stripped else None
+            elif stripped.startswith("id = "):
+                block_id = stripped.split('"', 2)[1] if '"' in stripped else None
+        name_ok = want_name is None or block_name == want_name
+        id_ok = want_id is None or block_id == want_id
+        if name_ok and id_ok and (block_name is not None or block_id is not None):
+            target_start, target_end = start, end
             break
 
     if target_start is None:
