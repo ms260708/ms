@@ -97,8 +97,15 @@ def _load_or_exit() -> tuple[dict, str]:
 
 def _fmt_ab(ahead: int | None, behind: int | None) -> str:
     if ahead is None or behind is None:
-        return "n/a"
-    return f"{ahead}/{behind}"
+        return "—"
+    if ahead == 0 and behind == 0:
+        return "—"
+    parts = []
+    if ahead:
+        parts.append(f"↑{ahead}")
+    if behind:
+        parts.append(f"↓{behind}")
+    return "".join(parts)
 
 
 def _remote_ab(path: str, remote: str) -> str:
@@ -146,7 +153,7 @@ def cmd_status(args) -> int:
         rows.append(
             (name, policy, dirty_s, _remote_ab(exp, "origin"), _remote_ab(exp, "aliyun"))
         )
-    header = ("NAME", "POLICY", "DIRTY", "ORIGIN(A/B)", "ALIYUN(A/B)")
+    header = ("NAME", "POLICY", "DIRTY", "GITHUB", "ALIYUN")
     table = [header, *[[str(c) for c in row] for row in rows]]
     widths = [max(len(row[i]) for row in table) for i in range(len(header))]
     fmt = "  ".join(f"{{:<{w}}}" for w in widths)
