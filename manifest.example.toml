@@ -1,0 +1,21 @@
+# Example manifest for `ms`. The real manifest lives at
+# ~/.config/ms/manifest.toml (override with the MS_MANIFEST env var) and is
+# created automatically by `ms add` — it is NOT tracked in this repository,
+# since it holds your personal repo list and local paths. Sync it across your
+# own machines via a private channel (e.g. your dotfiles repo).
+
+[github]
+default_owner = "your-name"
+
+[aliyun]
+ssh_host = "your-vps-host"   # an ssh host alias from ~/.ssh/config
+base_dir = "~/repos"         # ~ is expanded on the REMOTE shell
+
+# Repos are appended below as [[repo]] blocks by `ms add`.
+
+[[repo]]
+name = "example"
+id = "example"
+path = "~/path/to/your-repo"   # ~ is expanduser'd locally before use
+github = "your-name/example"   # owner/repo; omit if there is no github remote
+push_policy = "aliyun-only"    # aliyun-only | both | skip

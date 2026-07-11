@@ -45,6 +45,12 @@ github = "licoded/cdx"    # owner/repo; omit if there is no github remote
 push_policy = "aliyun-only"   # aliyun-only | both | skip
 ```
 
+The real manifest is **not** tracked in this repo — it holds your personal repo
+list and local paths. This repo ships only `manifest.example.toml` as a template.
+To sync it across your own machines, keep it in a private channel (e.g. your
+dotfiles repo); on a new machine, drop it at `~/.config/ms/manifest.toml` then
+run `ms bootstrap` to clone the repos it lists.
+
 ## Commands
 
 | Command | Description |

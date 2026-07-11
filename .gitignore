@@ -9,3 +9,7 @@ venv/
 .pytest_cache/
 .ruff_cache/
 .DS_Store
+
+# Real manifest is personal data (repo list + local paths);
+# only the example is tracked. See manifest.example.toml.
+/manifest.toml
