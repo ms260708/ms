@@ -43,8 +43,8 @@ github = "ms260708/dotfiles"
 push_policy = "aliyun-only"
 
 [[repo]]
-name = "GLM Usage"
-id = "glm"
+name = "glm_usage"
+id = "glm_usage"
 path = "~/files/envs/py/small_scripts/glm"
 github = "ms260708/glm-usage"
 push_policy = "aliyun-only"

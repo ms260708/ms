@@ -323,7 +323,7 @@ def cmd_push(args) -> int:
     data, _ = _load_or_exit()
     rs = manifest.repos(data)
     if args.name:
-        rs = [r for r in rs if r.get("name") == args.name]
+        rs = manifest.filter_repos(data, args.name)
         if not rs:
             print(f"no repo named '{args.name}'", file=sys.stderr)
             return 1
@@ -351,7 +351,7 @@ def cmd_pull(args) -> int:
     data, _ = _load_or_exit()
     rs = manifest.repos(data)
     if args.name:
-        rs = [r for r in rs if r.get("name") == args.name]
+        rs = manifest.filter_repos(data, args.name)
         if not rs:
             print(f"no repo named '{args.name}'", file=sys.stderr)
             return 1

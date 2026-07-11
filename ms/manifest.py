@@ -131,6 +131,11 @@ def find_repo_by_name(data: dict, name: str) -> dict | None:
     return None
 
 
+def filter_repos(data: dict, name: str) -> list[dict]:
+    """Filter repos by name or id."""
+    return [r for r in repos(data) if r.get("name") == name or r.get("id") == name]
+
+
 def find_repo_by_path(data: dict, exp_path: str) -> dict | None:
     for r in repos(data):
         if expand(r.get("path")) == exp_path:
