@@ -13,3 +13,6 @@ venv/
 # Real manifest is personal data (repo list + local paths);
 # only the example is tracked. See manifest.example.toml.
 /manifest.toml
+
+# Task work-logs / scratch (not project artifacts)
+records/
