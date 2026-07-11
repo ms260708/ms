@@ -162,12 +162,12 @@ def update_repo_field(
     if current_start is not None:
         blocks.append((current_start, len(lines) - 1))
 
-    # 2. Find the block that contains name = "..."
+    # 2. Find the block that contains name = "..." or id = "..."
     target_start = target_end = None
     for start, end in blocks:
         for i in range(start, end + 1):
             stripped = lines[i].strip()
-            if stripped.startswith("name = ") and f'"{name}"' in stripped:
+            if (stripped.startswith("name = ") or stripped.startswith("id = ")) and f'"{name}"' in stripped:
                 target_start, target_end = start, end
                 break
         if target_start is not None:
