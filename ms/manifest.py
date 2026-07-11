@@ -129,3 +129,70 @@ def find_repo_by_path(data: dict, exp_path: str) -> dict | None:
         if expand(r.get("path")) == exp_path:
             return r
     return None
+
+
+def update_repo_field(
+    mpath: str, name: str, updates: dict[str, str | None]
+) -> bool:
+    """Edit a [[repo]] block in-place by name.
+
+    *updates* maps TOML keys to new values.  A value of ``None`` (or empty
+    string) means *delete that key* from the block.  Returns ``True`` if the
+    block was found and modified.
+    """
+    with open(mpath, "r") as f:
+        lines = f.readlines()
+
+    # 1. Find all [[repo]] blocks and their ranges.
+    blocks: list[tuple[int, int]] = []
+    current_start = None
+    for i, line in enumerate(lines):
+        stripped = line.strip()
+        if stripped == "[[repo]]":
+            if current_start is not None:
+                blocks.append((current_start, i - 1))
+            current_start = i
+    if current_start is not None:
+        blocks.append((current_start, len(lines) - 1))
+
+    # 2. Find the block that contains name = "..."
+    target_start = target_end = None
+    for start, end in blocks:
+        for i in range(start, end + 1):
+            stripped = lines[i].strip()
+            if stripped.startswith("name = ") and f'"{name}"' in stripped:
+                target_start, target_end = start, end
+                break
+        if target_start is not None:
+            break
+
+    if target_start is None:
+        return False
+
+    # 3. Apply updates within the block.
+    for key, val in updates.items():
+        # Find existing key line
+        key_line_idx = None
+        for i in range(target_start, target_end + 1):
+            stripped = lines[i].strip()
+            if stripped.startswith(f"{key} = "):
+                key_line_idx = i
+                break
+
+        if val is None or val == "":
+            # Delete the line
+            if key_line_idx is not None:
+                del lines[key_line_idx]
+                target_end -= 1
+        else:
+            new_line = f'{key} = "{_esc(val)}"\n'
+            if key_line_idx is not None:
+                lines[key_line_idx] = new_line
+            else:
+                # Insert after the last line of the block
+                lines.insert(target_end + 1, new_line)
+                target_end += 1
+
+    with open(mpath, "w") as f:
+        f.writelines(lines)
+    return True

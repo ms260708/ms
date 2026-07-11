@@ -51,8 +51,8 @@ def build_parser() -> argparse.ArgumentParser:
     sp.add_argument("-n", "--dry-run", action="store_true", default=argparse.SUPPRESS)
     sp.set_defaults(func=cmd_mirror)
 
-    sp = sub.add_parser("push", help="push to aliyun (and origin with --backup)")
-    sp.add_argument("--backup", action="store_true", help="also push to origin (GitHub)")
+    sp = sub.add_parser("push", help="push to aliyun (and origin with --all)")
+    sp.add_argument("--all", action="store_true", help="also push to origin (GitHub)")
     sp.add_argument("--name", help="select a single repo by name")
     sp.add_argument("-n", "--dry-run", action="store_true", default=argparse.SUPPRESS)
     sp.set_defaults(func=cmd_push)
@@ -66,6 +66,13 @@ def build_parser() -> argparse.ArgumentParser:
     sp = sub.add_parser("bootstrap", help="clone repos whose path is missing")
     sp.add_argument("-n", "--dry-run", action="store_true", default=argparse.SUPPRESS)
     sp.set_defaults(func=cmd_bootstrap)
+
+    sp = sub.add_parser("edit", help="modify a registered repo's settings")
+    sp.add_argument("name", help="repo name to edit")
+    sp.add_argument("--policy", choices=["aliyun-only", "both", "skip"])
+    sp.add_argument("--github", help="set github owner/repo (pass '' to clear)")
+    sp.add_argument("-n", "--dry-run", action="store_true", default=argparse.SUPPRESS)
+    sp.set_defaults(func=cmd_edit)
 
     sp = sub.add_parser("config", help="print resolved manifest path and config")
     sp.set_defaults(func=cmd_config)
@@ -226,6 +233,34 @@ def cmd_add(args) -> int:
     return 0
 
 
+def cmd_edit(args) -> int:
+    data, mpath = _load_or_exit()
+    repo = manifest.find_repo_by_name(data, args.name)
+    if not repo:
+        print(f"no repo named '{args.name}'", file=sys.stderr)
+        return 1
+
+    updates: dict[str, str | None] = {}
+    if args.policy is not None:
+        updates["push_policy"] = args.policy
+    if args.github is not None:
+        updates["github"] = args.github or None  # "" → None (clear)
+
+    if not updates:
+        print("nothing to change", file=sys.stderr)
+        return 1
+
+    for k, v in updates.items():
+        print(f"  {k}: {repo.get(k, '(absent)')} → {v or '(removed)'}")
+
+    if args.dry_run:
+        print(f"[dry-run] would update {mpath}")
+    else:
+        manifest.update_repo_field(mpath, args.name, updates)
+        print(f"updated [[repo]] {args.name} in {mpath}")
+    return 0
+
+
 def cmd_mirror(args) -> int:
     data, _ = _load_or_exit()
     al = manifest.aliyun_section(data)
@@ -270,7 +305,7 @@ def cmd_push(args) -> int:
             print(f"{name}: skipped (path missing)")
             continue
         parts = [f"aliyun: {gitops.push(exp, 'aliyun', 'HEAD', dry_run=args.dry_run)}"]
-        if args.backup or policy == "both":
+        if args.all or policy == "both":
             parts.append(
                 f"origin: {gitops.push(exp, 'origin', 'HEAD', dry_run=args.dry_run)}"
             )
