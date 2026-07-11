@@ -32,10 +32,10 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("-n", "--dry-run", action="store_true", default=False)
     sub = p.add_subparsers(dest="cmd", required=True)
 
-    sp = sub.add_parser("list", help="list registered repos + aliyun/github config")
+    sp = sub.add_parser("list", aliases=["ls"], help="list registered repos + aliyun/github config")
     sp.set_defaults(func=cmd_list)
 
-    sp = sub.add_parser("status", help="show dirty + ahead/behind per repo")
+    sp = sub.add_parser("status", aliases=["st"], help="show dirty + ahead/behind per repo")
     sp.set_defaults(func=cmd_status)
 
     sp = sub.add_parser("add", help="register a repo")
@@ -68,8 +68,9 @@ def build_parser() -> argparse.ArgumentParser:
     sp.set_defaults(func=cmd_bootstrap)
 
     sp = sub.add_parser("edit", help="modify a registered repo's settings")
-    sp.add_argument("name", help="repo name to edit")
+    sp.add_argument("name", help="repo name or id to edit")
     sp.add_argument("--name", dest="new_name", help="change display name")
+    sp.add_argument("--id", dest="new_id", help="change mirror path id")
     sp.add_argument("--path", dest="new_path", help="change local path")
     sp.add_argument("--move", action="store_true", help="actually mv the directory when changing path")
     sp.add_argument("--policy", choices=["aliyun-only", "both", "skip"])
@@ -256,6 +257,8 @@ def cmd_edit(args) -> int:
     updates: dict[str, str | None] = {}
     if args.new_name is not None:
         updates["name"] = args.new_name
+    if args.new_id is not None:
+        updates["id"] = args.new_id
     if args.new_path is not None:
         updates["path"] = manifest.shorten_home(manifest.expand(args.new_path) or args.new_path)
     if args.policy is not None:
