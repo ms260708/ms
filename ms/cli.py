@@ -180,11 +180,16 @@ def cmd_config(args) -> int:
     data = manifest.load(mpath) if exists else {}
     gh = manifest.github_section(data)
     al = manifest.aliyun_section(data)
-    print(f"manifest_path: {mpath} (exists={exists})")
-    print(f"ssh_host: {al.get('ssh_host')}")
-    print(f"base_dir: {al.get('base_dir')}")
-    print(f"default_owner: {gh.get('default_owner')}")
-    print(f"repo_count: {len(manifest.repos(data))}")
+    pairs = [
+        ("manifest", f"{mpath} ({'exists' if exists else 'missing'})"),
+        ("github.default_owner", gh.get("default_owner")),
+        ("aliyun.ssh_host", al.get("ssh_host")),
+        ("aliyun.base_dir", al.get("base_dir")),
+        ("repo_count", len(manifest.repos(data))),
+    ]
+    width = max(len(k) for k, _ in pairs)
+    for k, v in pairs:
+        print(f"{k:<{width}}  {v}")
     return 0
 
 
