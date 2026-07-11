@@ -138,7 +138,6 @@ def find_repo(data: dict, *, name: str | None = None, id: str | None = None) -> 
 def find_repo_by_key(data: dict, key: str) -> dict | None:
     """Find a repo by name OR id (used for user-facing lookup like edit)."""
     return find_repo(data, name=key) or find_repo(data, id=key)
-    return None
 
 
 def filter_repos(
