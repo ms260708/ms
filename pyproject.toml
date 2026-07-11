@@ -8,7 +8,7 @@ version = "0.2.0"
 description = "Personal multi-repo + dual-remote sync manager (GitHub + aliyun bare mirror)."
 readme = "README.md"
 requires-python = ">=3.11"
-authors = [{ name = "licoded" }]
+authors = [{ name = "ms260708" }]
 
 [project.scripts]
 ms = "ms.cli:main"
