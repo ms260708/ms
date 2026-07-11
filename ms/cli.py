@@ -70,6 +70,8 @@ def build_parser() -> argparse.ArgumentParser:
     sp = sub.add_parser("edit", help="modify a registered repo's settings")
     sp.add_argument("name", help="repo name to edit")
     sp.add_argument("--name", dest="new_name", help="change display name")
+    sp.add_argument("--path", dest="new_path", help="change local path")
+    sp.add_argument("--move", action="store_true", help="actually mv the directory when changing path")
     sp.add_argument("--policy", choices=["aliyun-only", "both", "skip"])
     sp.add_argument("--github", help="set github owner/repo (pass '' to clear)")
     sp.add_argument("-n", "--dry-run", action="store_true", default=argparse.SUPPRESS)
@@ -252,6 +254,8 @@ def cmd_edit(args) -> int:
     updates: dict[str, str | None] = {}
     if args.new_name is not None:
         updates["name"] = args.new_name
+    if args.new_path is not None:
+        updates["path"] = manifest.shorten_home(manifest.expand(args.new_path) or args.new_path)
     if args.policy is not None:
         updates["push_policy"] = args.policy
     if args.github is not None:
@@ -261,8 +265,22 @@ def cmd_edit(args) -> int:
         print("nothing to change", file=sys.stderr)
         return 1
 
+    # Show changes
     for k, v in updates.items():
         print(f"  {k}: {repo.get(k, '(absent)')} → {v or '(removed)'}")
+
+    # Handle --move for path change
+    if "path" in updates and not args.dry_run:
+        old_path = manifest.expand(repo.get("path"))
+        new_path = manifest.expand(updates["path"])
+        if old_path and new_path and os.path.isdir(old_path):
+            if args.move:
+                os.rename(old_path, new_path)
+                print(f"  moved: {old_path} → {new_path}")
+            else:
+                print(f"  ℹ️  directory not moved. Run: mv {old_path} {new_path}")
+        elif old_path and not os.path.isdir(old_path):
+            print(f"  ⚠️  old path does not exist: {old_path}")
 
     if args.dry_run:
         print(f"[dry-run] would update {mpath}")
