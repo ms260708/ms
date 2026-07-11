@@ -131,10 +131,11 @@ def cmd_list(args) -> int:
     print(f"github default_owner: {gh.get('default_owner')}")
     print(f"aliyun ssh_host={al.get('ssh_host')}  base_dir={al.get('base_dir')}")
     print(f"{len(rs)} repo(s):")
-    print(f"{'NAME':<20} {'POLICY':<14} {'GITHUB':<32} PATH")
+    print(f"{'NAME':<16} {'ID':<20} {'POLICY':<14} {'GITHUB':<32} PATH")
     for r in rs:
         print(
-            f"{str(r.get('name', '')):<20} {str(r.get('push_policy', '')):<14} "
+            f"{str(r.get('name', '')):<16} {manifest.repo_id(r):<20} "
+            f"{str(r.get('push_policy', '')):<14} "
             f"{str(r.get('github') or '-'):<32} {r.get('path', '')}"
         )
     return 0
@@ -146,17 +147,18 @@ def cmd_status(args) -> int:
     rows: list[tuple] = []
     for r in rs:
         name = str(r.get("name", "?"))
+        rid = manifest.repo_id(r)
         policy = str(r.get("push_policy", "?"))
         exp = manifest.expand(r.get("path"))
         if not exp or not os.path.isdir(exp):
-            rows.append((name, policy, "missing", "missing", "missing"))
+            rows.append((name, rid, policy, "missing", "missing", "missing"))
             continue
         dirty = gitops.dirty_count(exp)
         dirty_s = "n/a" if dirty is None else str(dirty)
         rows.append(
-            (name, policy, dirty_s, _remote_ab(exp, "origin"), _remote_ab(exp, "aliyun"))
+            (name, rid, policy, dirty_s, _remote_ab(exp, "origin"), _remote_ab(exp, "aliyun"))
         )
-    header = ("NAME", "POLICY", "DIRTY", "GITHUB", "ALIYUN")
+    header = ("NAME", "ID", "POLICY", "DIRTY", "GITHUB", "ALIYUN")
     table = [header, *[[str(c) for c in row] for row in rows]]
     widths = [max(len(row[i]) for row in table) for i in range(len(header))]
     fmt = "  ".join(f"{{:<{w}}}" for w in widths)

@@ -126,7 +126,7 @@ def repo_id(repo: dict) -> str:
 
 def find_repo_by_name(data: dict, name: str) -> dict | None:
     for r in repos(data):
-        if r.get("name") == name:
+        if r.get("name") == name or r.get("id") == name:
             return r
     return None
 
