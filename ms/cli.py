@@ -53,13 +53,13 @@ def build_parser() -> argparse.ArgumentParser:
 
     sp = sub.add_parser("push", help="push to aliyun (and origin with --all)")
     sp.add_argument("--all", action="store_true", help="also push to origin (GitHub)")
-    sp.add_argument("--name", help="select a single repo by name")
+    sp.add_argument("--name", help="select a single repo by name or id")
     sp.add_argument("-n", "--dry-run", action="store_true", default=argparse.SUPPRESS)
     sp.set_defaults(func=cmd_push)
 
     sp = sub.add_parser("pull", help="pull from aliyun (and origin with --backup)")
     sp.add_argument("--backup", action="store_true", help="pull from origin (GitHub) instead of aliyun")
-    sp.add_argument("--name", help="select a single repo by name")
+    sp.add_argument("--name", help="select a single repo by name or id")
     sp.add_argument("-n", "--dry-run", action="store_true", default=argparse.SUPPRESS)
     sp.set_defaults(func=cmd_pull)
 
