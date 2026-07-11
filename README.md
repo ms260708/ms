@@ -46,10 +46,10 @@ push_policy = "aliyun-only"   # aliyun-only | both | skip
 ```
 
 The real manifest is **not** tracked in this repo — it holds your personal repo
-list and local paths. This repo ships only `manifest.example.toml` as a template.
-To sync it across your own machines, keep it in a private channel (e.g. your
-dotfiles repo); on a new machine, drop it at `~/.config/ms/manifest.toml` then
-run `ms bootstrap` to clone the repos it lists.
+list and local paths, and is **machine-local**: each machine keeps its own
+(different repo set, different paths, tuned as needed), so don't sync it across
+machines. On a new machine, build it up with `ms add`; `ms bootstrap` then clones
+any registered repo whose local path is missing.
 
 ## Commands
 
